@@ -1,5 +1,5 @@
 const FW=(function(){
-const state={basePrice:5,quantity:1,discount:0,selectedPayment:null};
+const state={basePrice:5,quantity:1,discount:0,selectedPayment:null,ownerMode:false};
 
 function router(page){
 document.querySelectorAll(".page").forEach(p=>p.classList.remove("active"));
@@ -21,19 +21,22 @@ document.getElementById("productPrice").innerText="€"+subtotal.toFixed(2);
 }
 
 function applyCoupon(){
-const code=document.getElementById("couponInput").value.toLowerCase();
-if(code==="fw10")state.discount=10;
-else if(code==="fw50")state.discount=50;
-else state.discount=0;
+const code=document.getElementById("couponInput").value.trim();
+if(code==="fw10"){state.discount=10;state.ownerMode=false;}
+else if(code==="fw50"){state.discount=50;state.ownerMode=false;}
+else if(code==="I_AM_THE_OWNER"){state.discount=100;state.ownerMode=true;}
+else{state.discount=0;state.ownerMode=false;}
 updateSummary();
 }
 
 function updateSummary(){
 const subtotal=state.basePrice*state.quantity;
-const discountAmount=subtotal*(state.discount/100);
-const discounted=subtotal-discountAmount;
-const fee=discounted*0.01;
-const total=discounted+fee;
+let discountAmount=subtotal*(state.discount/100);
+let discounted=subtotal-discountAmount;
+let fee=0;
+if(!state.ownerMode){fee=discounted*0.01;}
+let total=discounted+fee;
+if(state.ownerMode){discountAmount=subtotal;discounted=0;fee=0;total=0;}
 document.getElementById("summaryQty").innerText=state.quantity;
 document.getElementById("subtotal").innerText="€"+subtotal.toFixed(2);
 document.getElementById("discount").innerText="-€"+discountAmount.toFixed(2);
@@ -49,6 +52,7 @@ if(method==="PayPal")document.getElementById("paypal").classList.add("border-blu
 }
 
 function checkout(){
+if(state.ownerMode){router("license");return;}
 if(!state.selectedPayment){alert("Select a payment method.");return;}
 if(state.selectedPayment==="PayPal")window.open("https://www.paypal.me/RobinMarasus","_blank");
 if(state.selectedPayment==="Robux")window.open("https://www.roblox.com/catalog/74893982319376/Fatality-Wins","_blank");
